@@ -1,0 +1,62 @@
+name: CICD
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION_FOR_LINTING: "20.11.1"
+  PYTHON_VERSION_FOR_LINTING: "3.12"
+  POETRY_VERSION: "1.8.2"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      # Root path under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION_FOR_LINTING }}
+
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION_FOR_LINTING }}
+
+      - name: Set up poetry (unix one-shot)
+        shell: bash
+        run: |
+          curl -sSL https://install.python-poetry.org | \
+          python3 - --version ${{env.POETRY_VERSION}} \
+          && echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Set up pyright
+        shell: bash
+        run: |
+          npm install -g pyright
+
+      - name: Set up linting deps
+        shell: bash
+        run: |
+          poetry install --no-root --only lint
+
+      - name: Run ruff
+        shell: bash
+        run:
+          poetry run ruff check
+      
+      - name: Run pyright
+        shell: bash
+        run: |
+          pyright
+
+      - name: Run refurb
+        shell: bash
+        run: |
+          poetry run refurb .
