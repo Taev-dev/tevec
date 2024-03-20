@@ -43,7 +43,7 @@ addopts = "--import-mode=importlib"
 cache_dir = '/tmp/pytest_cache'
 
 [tool.ruff]
-dummy-variable-rgx = "^__$"
+dummy-variable-rgx = "^_{0,1}$"
 line-length = 79
 select = [
     "F",
